@@ -17,6 +17,20 @@ parameter OP_R = 7'b0110011,
 			 
 			 FUNCT7_ADD	= 7'b0000000,
 			 FUNCT7_SUB = 7'b0100000;
+			 
+			 
+			//Cod state
+			STATE_ZERO = 4'b0000,
+			STATE_ONE = 4'b0001,
+			STATE_TWO = 4'b0010,
+			STATE_THREE = 4'b0011,
+			STATE_FOUR = 4'b0100,
+			STATE_FIVE = 4'b0101,
+			STATE_SIX = 4'b0110,
+			STATE_SEVEN = 4'b0111,
+			STATE_EIGHT = 4'b1000,
+			STATE_NINE = 4'b1001,
+			STATE_TEN = 4'b1010;
 
 
 module Controle(
@@ -71,21 +85,10 @@ module Controle(
 	//Registrador de estados
 	reg [3:0] state;
 	
-	//Cod state
-	parameter state_zero = 4'b0000,
-				state_one = 4'b0001,
-				state_two = 4'b0010,
-				state_three = 4'b0011,
-				state_four = 4'b0100,
-				state_five = 4'b0101,
-				state_six = 4'b0110,
-				state_saven = 4'b0111,
-				state_eight = 4'b1000,
-				state_nine = 4'b1001,
 				
 	//start machine 
 	initial begin 
-		state <= state_zero;
+		state <= STATE_ZERO;
 		
 		//Output right
 		oOrigPC <= 1'b0;
@@ -112,90 +115,95 @@ module Controle(
 	always @(posedge iClk) begin
 		case(state)
 			
-			state_zero: begin 
-				state <= state_one;
+			STATE_ZERO: begin 
+				state <= STATE_ONE;
 			end
 			
 			
-			state_one: begin 
+			STATE_ONE: begin 
 				
 				case(Opcode)
 					OP_R:begin
-						state <= state_six;
+						state <= STATE_SIX;
 					end
 					
 					OP_B: begin
-						state <= state_eight;
+						state <= STATE_EIGHT;
 					end
 					
 					OP_LOAD: begin
-						state <= state_two;
+						state <= STATE_TWO;
 					end
 					
 					OP_STORE: begin
-						state <= state_two;
+						state <= STATE_TWO;
 					end
 					
 					OP_JAL: begin
-						state <= state_nine;
+						state <= STATE_NINE;
 					end
 					
 					OP_R_IMM: begin
-					
+						state <= STATE_SEVEN;
 					end
 				endcase
 			end 
 			
 			
-			state_two: begin 
+			STATE_TWO: begin 
 				case(Opcode)
 					OP_LOAD: begin
-						state <= state_three;
+						state <= STATE_THREE;
 					end
 					
 					OP_STORE: begin
-						state <= state_five;
+						state <= STATE_FIVE;
 					end
 				endcase
 			end
 			
 			
-			state_three: begin
-				state <= state_four;
+			STATE_THREE: begin
+				state <= STATE_FOUR;
 			end
 			
 			
-			state_four: begin
-				state <= state_zero;
+			STATE_FOUR: begin
+				state <= STATE_ZERO;
 			end
 			
 			
-			state_five: begin
-				state <= state_zero;
+			STATE_FIVE: begin
+				state <= STATE_ZERO;
 			end
 			
 			
-			state_six: begin 
-				state <= state_seven;
+			STATE_SIX: begin 
+				state <= STATE_ZERO;
 			end
 			
 			
 			state_saven: begin
-				state <= state_zero;
+				state <= STATE_ZERO;
 			end
 			
 			
-			state_eight:begin
-				state <= state_zero;
+			STATE_EIGHT:begin
+				state <= STATE_ZERO;
 			end
 			
 			
-			state_nine:begin
-				state <= state_zero;
+			STATE_NINE:begin
+				state <= STATE_ZERO;
 			end
 		
+		
+			STATE_TEN: begin
+				state <= STATE_SEVEN;
+			end
 		endcase
 	end
+	
 	
 	//Define output for each state
 	always @(posedge iClk) begin
@@ -204,7 +212,7 @@ module Controle(
 			//end
 			
 			
-			state_one: begin 
+			STATE_ONE: begin 
 				//Output right
 				//oOrigPC = 1'b;
 				oALUOp = 2'b00;
@@ -225,7 +233,7 @@ module Controle(
 			end 
 			
 			
-			state_two: begin 
+			STATE_TWO: begin 
 				//Output right
 				//oOrigPC <= 1'b;
 				oALUOp = 2'b00;
@@ -246,7 +254,7 @@ module Controle(
 			end
 			
 			
-			state_three: begin
+			STATE_THREE: begin
 				//Output right
 				//oOrigPC <= 1'b;
 				//oALUOp <= 2'b00;
@@ -267,7 +275,7 @@ module Controle(
 			end
 			
 			
-			state_four: begin
+			STATE_FOUR: begin
 				//Output right
 				//oOrigPC = 1'b;
 				//oALUOp = 2'b00;
@@ -288,7 +296,7 @@ module Controle(
 			end
 			
 			
-			state_five: begin
+			STATE_FIVE: begin
 				//Output right
 				//oOrigPC = 1'b;
 				//oALUOp = 2'b00;
@@ -308,7 +316,7 @@ module Controle(
 			end
 			
 			
-			state_six: begin 
+			STATE_SIX: begin 
 				//Output right
 				//oOrigPC = 1'b;
 				oALUOp = 2'b10;
@@ -348,7 +356,7 @@ module Controle(
 			end
 			
 			
-			state_eight:begin
+			STATE_EIGHT:begin
 				//Output right
 				oOrigPC = 1'b1;
 				oALUOp = 2'b01;
@@ -356,7 +364,7 @@ module Controle(
 				oOrigBULA = 2'b00;
 				//oWritePCB;
 				//oRegWrite;
-				oMemTwoReg = 1'b10;
+				oMemTwoReg = 2'b10;
 				//Output left
 				oWritePCCond = 1'b0;
 				//oWritePC;
@@ -368,7 +376,7 @@ module Controle(
 			end
 			
 			
-			state_nine:begin
+			STATE_NINE:begin
 				//Output right
 				oOrigPC = 1'b1;
 				//oALUOp = 2'b00;
@@ -376,7 +384,7 @@ module Controle(
 				//oOrigBULA = 2'b11;
 				//oWritePCB;
 				oRegWrite = 1'b0;
-				oMemTwoReg = 1'b01;
+				oMemTwoReg =2'b01;
 				//Output left
 				//oWritePCCond;
 				oWritePC = 1'b0;
@@ -385,6 +393,25 @@ module Controle(
 				oMemRead = 1'b0;
 				//oWriteIR;
 				
+			end
+			
+			
+			STATE_TEN: begin
+				//Output right
+				//oOrigPC = 1'b;
+				oALUOp = 2'b10;
+				oOrigAULA = 2'b01;
+				oOrigBULA = 2'10;
+				//oWritePCB;
+				//oRegWrite;
+				//oMemTwoReg = 1'b10;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				//oMemRead = 1'b0;
+				//oWriteIR;
 			end
 		
 		endcase

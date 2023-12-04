@@ -196,5 +196,198 @@ module Controle(
 		
 		endcase
 	end
+	
+	//Define output for each state
+	always @(posedge iClk) begin
+		case(state)
+			//state_zero: begin 	
+			//end
+			
+			
+			state_one: begin 
+				//Output right
+				//oOrigPC = 1'b;
+				oALUOp = 2'b00;
+				oOrigAULA = 2'b00;
+				oOrigBULA = 2'b11;
+				//oWritePCB;
+				//oRegWrite;
+				//oMemTwoReg;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				//oMemRead;
+				//oWriteIR;
+	
+				
+			end 
+			
+			
+			state_two: begin 
+				//Output right
+				//oOrigPC <= 1'b;
+				oALUOp = 2'b00;
+				oOrigAULA = 2'b01;
+				oOrigBULA = 2'b10;
+				//oWritePCB;
+				//oRegWrite;
+				//oMemTwoReg;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				//oMemRead;
+				//oWriteIR;
+	
+				
+			end
+			
+			
+			state_three: begin
+				//Output right
+				//oOrigPC <= 1'b;
+				//oALUOp <= 2'b00;
+				//oOrigAULA <= 2'b00;
+				//oOrigBULA <= 2'b11;
+				//oWritePCB;
+				//oRegWrite;
+				//oMemTwoReg;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				oLoudD = 1'b1;
+				//oMemWrite;
+				oMemRead = 1'b0;
+				//oWriteIR;
+	
+				
+			end
+			
+			
+			state_four: begin
+				//Output right
+				//oOrigPC = 1'b;
+				//oALUOp = 2'b00;
+				//oOrigAULA = 2'b00;
+				//oOrigBULA = 2'b11;
+				//oWritePCB;
+				//oRegWrite;
+				oMemTwoReg = 1'b10;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				oMemRead = 1'b0;
+				//oWriteIR;
+	
+			
+			end
+			
+			
+			state_five: begin
+				//Output right
+				//oOrigPC = 1'b;
+				//oALUOp = 2'b00;
+				//oOrigAULA = 2'b00;
+				//oOrigBULA = 2'b11;
+				//oWritePCB;
+				//oRegWrite;
+				//oMemTwoReg = 1'b10;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				oLoudD = 1'b1;
+				oMemWrite = 1'b0;
+				//oMemRead = 1'b0;
+				//oWriteIR;
+				
+			end
+			
+			
+			state_six: begin 
+				//Output right
+				//oOrigPC = 1'b;
+				oALUOp = 2'b10;
+				oOrigAULA = 2'b01;
+				oOrigBULA = 2'b00;
+				//oWritePCB;
+				//oRegWrite;
+				//oMemTwoReg = 1'b10;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				//oMemRead = 1'b0;
+				//oWriteIR;
+				
+			end
+			
+			
+			state_saven: begin
+				//Output right
+				//oOrigPC = 1'b;
+				//oALUOp = 2'b00;
+				//oOrigAULA = 2'b00;
+				//oOrigBULA = 2'b11;
+				//oWritePCB;
+				oRegWrite = 1'b0;
+				oMemTwoReg = 2'b00;
+				//Output left
+				//oWritePCCond;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				//oMemRead = 1'b0;
+				//oWriteIR;
+				
+			end
+			
+			
+			state_eight:begin
+				//Output right
+				oOrigPC = 1'b1;
+				oALUOp = 2'b01;
+				oOrigAULA = 2'b01;
+				oOrigBULA = 2'b00;
+				//oWritePCB;
+				//oRegWrite;
+				oMemTwoReg = 1'b10;
+				//Output left
+				oWritePCCond = 1'b0;
+				//oWritePC;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				//oMemRead = 1'b0;
+				//oWriteIR;
+				
+			end
+			
+			
+			state_nine:begin
+				//Output right
+				oOrigPC = 1'b1;
+				//oALUOp = 2'b00;
+				//oOrigAULA = 2'b00;
+				//oOrigBULA = 2'b11;
+				//oWritePCB;
+				oRegWrite = 1'b0;
+				oMemTwoReg = 1'b01;
+				//Output left
+				//oWritePCCond;
+				oWritePC = 1'b0;
+				//oLoudD <= 1'b0;
+				//oMemWrite;
+				oMemRead = 1'b0;
+				//oWriteIR;
+				
+			end
+		
+		endcase
+	end
 
 endmodule 

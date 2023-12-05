@@ -1,0 +1,26 @@
+module MemoryInterface(
+	iAdress,
+	iCLK,
+	iMemWrite,
+	iMemRead,
+	iWriteData,
+	oReadData;
+
+);
+
+	 input wire [31:0] iAdress,
+    input wire iCLK,
+    input wire iMemRead,
+    input wire iMemWrite,
+    input wire [31:0] iWriteData,
+    output reg [31:0] oReadData;
+	 
+	always @(posedge iCLK) begin 
+		if(iAdress[28]) begin 
+		
+		else
+	
+	end
+	
+	
+endmodule

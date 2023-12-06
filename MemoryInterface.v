@@ -4,15 +4,14 @@ module MemoryInterface(
 	iMemWrite,
 	iMemRead,
 	iWriteData,
-	oReadData;
-
+	oReadData
 );
 
-	 input wire [31:0] iAdress,
-    input wire iCLK,
-    input wire iMemRead,
-    input wire iMemWrite,
-    input wire [31:0] iWriteData,
+	 input wire [31:0] iAdress;
+    input wire iCLK;
+    input wire iMemRead;
+    input wire iMemWrite;
+    input wire [31:0] iWriteData;
     output reg [31:0] oReadData;
 	 
 	always @(posedge iCLK) begin 
@@ -34,6 +33,7 @@ module MemoryInterface(
 		
 		//Memoria de instrucao
 		else
+			begin
 			rom_isnt MEMORYINST(
 				.address(iAdress[9:0]),
 				.clock(iCLK),
@@ -41,7 +41,7 @@ module MemoryInterface(
 				.rden(iMemRead),
 				.q(oReadData)
 				);
-	
+			end
 	end
 	
 	

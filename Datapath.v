@@ -3,7 +3,7 @@ module Datapath (
 		input wire clockCPU, clockMem,
 		input wire reset,
 		input  wire[4:0] regin,
-		output reg [31:0] PC,
+		output reg [31:0] PCView,
 		output reg [31:0] Instr,
 		output reg [31:0] regout,
 		
@@ -28,6 +28,8 @@ module Datapath (
 reg 	[31:0] PC, PCBack, IR, MDR, A, B, ALUOut;
 
 assign iInst = IR;
+assign Instr = IR;
+assign PCView = PC;
 
 initial
 begin
@@ -47,6 +49,16 @@ wire [ 2:0] wFunct3		= IR[14:12];
 
 // Memoria
 
+wire [31:0] wMemLoad;
+
+MemoryInterface MEMORIA(
+	.iAdress(wMemAddress[9:0]),
+	.iCLK(clockMem),
+	.iMemWrite(oMemWrite),
+	.iMemRead(oMemRead),
+	.iWriteData(B),
+	.oReadData(wMemLoad)
+);
 
 //Banco de registradores
 
@@ -105,7 +117,7 @@ wire [31:0] wOrigBULA;
 always @(*)
 begin
 	case (oALUSrcB)
-		2'b00: wOrigBULA <= B
+		2'b00: wOrigBULA <= B;
 		2'b01: wOrigBULA <= 32'h00000004;
 		2'b10: wOrigBULA <= wImmediate;
 	endcase

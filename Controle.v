@@ -390,7 +390,7 @@ module Controle(
 				oWritePC = 1'b0;
 				//oLoudD <= 1'b0;
 				//oMemWrite;
-				oMemRead = 1'b0;
+				//oMemRead = 1'b0;
 				//oWriteIR;
 				
 			end

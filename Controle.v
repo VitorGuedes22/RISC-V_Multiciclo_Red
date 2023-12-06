@@ -18,6 +18,7 @@ parameter OP_R = 7'b0110011,
 			 FUNCT7_ADD	= 7'b0000000,
 			 FUNCT7_SUB = 7'b0100000,
 			 
+			 FETCH_STATE0 = 6'd11,
 			 FETCH_STATE = 6'd00,
 			 DECODE_STATE = 6'd01,
 			 LWSW_STATE = 6'd02,
@@ -46,12 +47,14 @@ module Controle (
 	oPCWrite,
 	oPCWriteCond,
 	oALUOp,
-	oPCSource
+	oPCSource,
+	oWritePCBack,
+	pState
 	);
 
 	input [31:0] iInst;
 	input iClk, iRst;
-	 
+	
 	output oRegWrite;
 	output oALUSrcA;
 	output [1:0] oALUSrcB;
@@ -64,6 +67,8 @@ module Controle (
 	output oPCWriteCond;
 	output oALUOp;
 	output oPCSource;
+	output [5:0] pState;
+	output oWritePCBack;
 	
 	wire [6:0] Opcode = iInst[6:0];
 	wire [2:0] funct3 = iInst[14:12];
@@ -73,10 +78,11 @@ module Controle (
 	wire [5:0] nextState;
 	
 	reg [3:0] contador;
+	assign pState = state;
 	
 	initial
 		begin
-			state <= FETCH_STATE;
+			state <= FETCH_STATE0;
 			contador <= 4'd0;
 		end
 	
@@ -96,6 +102,25 @@ module Controle (
 		always @(*)
 			case (state)
 				
+				FETCH_STATE0:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b0;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
+						
+						nextState <= FETCH_STATE;
+					end
+				
 				FETCH_STATE: 
 					begin
 						oRegWrite <= 1'b0;
@@ -110,11 +135,12 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b00;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b1;
 						
-						nextState <= DECODE_STATE;
+						nextState <= 6'd01;
 					end
 				
-				DECODE_STATE:
+				6'd01:
 					begin
 						oRegWrite <= 1'b0;
 						oALUSrcA <= 1'b0;
@@ -128,6 +154,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b00;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						case (Opcode)
 						
@@ -155,6 +182,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b00;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						case (Opcode)
 							OP_LOAD: nextState <= LW1_STATE;
@@ -176,6 +204,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b10;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= RTYPE2_STATE;
 					end
@@ -194,6 +223,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b00;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= LW2_STATE;
 					end
@@ -212,6 +242,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b00;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= FETCH_STATE;
 					end
@@ -230,6 +261,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b00;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= FETCH_STATE;
 					end
@@ -249,6 +281,7 @@ module Controle (
 						oPCWriteCond <= 1'b1;
 						oALUOp <= 2'b01;
 						oPCSource <= 1'b1;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= FETCH_STATE;
 						
@@ -268,6 +301,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b10;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= RTYPE2_STATE;
 					end
@@ -286,6 +320,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b10;
 						oPCSource <= 1'b0;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= FETCH_STATE;
 					end
@@ -304,6 +339,7 @@ module Controle (
 						oPCWriteCond <= 1'b0;
 						oALUOp <= 2'b10;
 						oPCSource <= 1'b1;
+						oWritePCBack <= 1'b0;
 						
 						nextState <= FETCH_STATE;
 				  end

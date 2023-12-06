@@ -21,7 +21,8 @@ module Datapath (
 		input oPCWrite,
 		input oPCWriteCond,
 		input oALUOp,
-		input oPCSource
+		input oPCSource,
+		input oWritePCBack
 	);
 	
 // Instanciação
@@ -29,7 +30,7 @@ reg 	[31:0] PC, PCBack, IR, MDR, A, B, ALUOut;
 
 assign iInst = IR;
 assign Instr = IR;
-assign PCView = PC;
+assign PCView = PCBack;
 
 initial
 begin
@@ -59,7 +60,7 @@ MemoryInterface MEMORIA(
 	.iWriteData(B),
 	.oReadData(wMemLoad)
 );
-
+  
 //Banco de registradores
 
 wire [31:0] wRead1, wRead2;
@@ -107,7 +108,7 @@ wire [31:0] wOrigAULA;
 always @(*)
 begin
 	case (oALUSrcA)
-		1'b0: wOrigALUA <= PC;
+		1'b0: wOrigAULA <= PC;
 		1'b1: wOrigAULA <= A;
 	endcase
 end
@@ -147,7 +148,7 @@ wire [31:0] wMemAddress;
 
 always @(*)
 begin
-	case (iIoD)
+	case (oIoD)
 		1'b0:	wMemAddress <= PC;
 		1'b1: wMemAddress <= ALUOut; 
 	endcase
@@ -168,16 +169,18 @@ begin
 		end
 	else
 		begin
-			ALUOut	<= wALUresult;
+			ALUOut	<= wALUResult;
 			A			<= wRead1;
 			B			<= wRead2;
 			MDR		<= wMemLoad;
 			
 			if (oIRWrite)
-				IR	<= wReadData;
+				IR	<= wMemLoad;
+			
+			if (oWritePCBack)
+				PCBack <= PC;	
 				
-				
-			if (oPCWrite || oZero && oPCWriteCond)
+			if (oPCWrite || wZero & oPCWriteCond)
 				PC	<= wiPC;	
 
 		end

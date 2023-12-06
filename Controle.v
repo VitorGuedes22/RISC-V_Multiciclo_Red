@@ -16,405 +16,297 @@ parameter OP_R = 7'b0110011,
 			 FUNCT3_XORI = 3'b010,
 			 
 			 FUNCT7_ADD	= 7'b0000000,
-			 FUNCT7_SUB = 7'b0100000;
+			 FUNCT7_SUB = 7'b0100000,
+			 
+			 FETCH_STATE = 6'd00,
+			 DECODE_STATE = 6'd01,
+			 LWSW_STATE = 6'd02,
+			 LW1_STATE = 6'd03,
+			 LW2_STATE = 6'd04,
+			 SW_STATE = 6'd05,
+			 RTYPE_STATE = 6'd06,
+			 RTYPE2_STATE = 6'd07,
+			 BRANCH_STATE = 6'd08,
+			 JUMP_STATE = 6'd09,
+			 RIMMTYPE_STATE = 6'd10;
 			 
 			 
-			//Cod state
-			STATE_ZERO = 4'b0000,
-			STATE_ONE = 4'b0001,
-			STATE_TWO = 4'b0010,
-			STATE_THREE = 4'b0011,
-			STATE_FOUR = 4'b0100,
-			STATE_FIVE = 4'b0101,
-			STATE_SIX = 4'b0110,
-			STATE_SEVEN = 4'b0111,
-			STATE_EIGHT = 4'b1000,
-			STATE_NINE = 4'b1001,
-			STATE_TEN = 4'b1010;
-
-
-module Controle(
-	iClk,
+module Controle (
 	iInst,
-	
-	//Output right
-	oOrigPC,
-	oALUOp,
-	oOrigAULA,
-	oOrigBULA,
-	oWritePCB,
+	iClk,
+	iRst,
 	oRegWrite,
-	oMemTwoReg,
-	
-	//Output left
-	oWritePCCond,
-	oWritePC,
-	oLoudD,
-	oMemWrite,
+	oALUSrcA,
+	oALUSrcB,
 	oMemRead,
-	oWriteIR,
-
-);
-
-	input wire iClk;
+	oMemWrite,
+	oMemtoReg,
+	oIoD,
+	oIRWrite,
+	oPCWrite,
+	oPCWriteCond,
+	oALUOp,
+	oPCSource
+	);
 
 	input [31:0] iInst;
+	input iClk, iRst;
+	 
+	output oRegWrite;
+	output oALUSrcA;
+	output [1:0] oALUSrcB;
+	output oMemRead;
+	output oMemWrite;
+	output oMemtoReg;
+	output oIoD;
+	output oIRWrite;
+	output oPCWrite;
+	output oPCWriteCond;
+	output oALUOp;
+	output oPCSource;
 	
 	wire [6:0] Opcode = iInst[6:0];
 	wire [2:0] funct3 = iInst[14:12];
 	wire [6:0] funct7 = iInst[31:25];
 	
+	reg [5:0] state;
+	wire [5:0] nextState;
 	
-	//Output right
-	output [1:0] oOrigPC;
-	output [1:0] oALUOp;
-	output [1:0} oOrigAULA;
-	output [1:0] oOrigBULA;
-	output oWritePCB;
-	output oRegWrite;
-	output [2:0] oMemTwoReg;
+	reg [3:0] contador;
 	
-	//Output left
-	output oWritePCCond;
-	output oWritePC;
-	output oLoudD;
-	output oMemWrite;
-	output oMemRead;
-	output oWriteIR;
+	initial
+		begin
+			state <= FETCH_STATE;
+			contador <= 4'd0;
+		end
 	
-	//Registrador de estados
-	reg [3:0] state;
-	
+	always @(posedge iClk or posedge iRst)
+		begin
+			if (iRst)
+				begin
+					state <= FETCH_STATE;
+					contador <= 4'd0;
+				end
+			else
+				begin
+					state <= nextState;
+				end
+		end
+		
+		always @(*)
+			case (state)
 				
-	//start machine 
-	initial begin 
-		state <= STATE_ZERO;
-		
-		//Output right
-		oOrigPC <= 1'b0;
-		oALUOp <= 2'b00;
-		oOrigAULA <= 2'b10;
-		oOrigBULA <= 2'b01;
-		oWritePCB;
-			//oRegWrite;
-			//oMemTwoReg;
-		
-		
-		//Output left
-			//oWritePCCond;
-		oWritePC;
-		oLoudD <= 1'b0;
-			//oMemWrite;
-		oMemRead;
-		oWriteIR;
-		
-	end
-	
-	
-	//Define next state
-	always @(posedge iClk) begin
-		case(state)
-			
-			STATE_ZERO: begin 
-				state <= STATE_ONE;
-			end
-			
-			
-			STATE_ONE: begin 
+				FETCH_STATE: 
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b0;
+						oALUSrcB <= 2'b01;
+						oMemRead <= 1'b1;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b1;
+						oPCWrite <= 1'b1;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						
+						nextState <= DECODE_STATE;
+					end
 				
-				case(Opcode)
-					OP_R:begin
-						state <= STATE_SIX;
+				DECODE_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b0;
+						oALUSrcB <= 2'b10;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						
+						case (Opcode)
+						
+							OP_LOAD,
+							OP_STORE: nextState <= LWSW_STATE;
+							OP_B: nextState <= BRANCH_STATE;
+							OP_JAL: nextState <= JUMP_STATE;
+							OP_R: nextState <= RTYPE_STATE;
+							OP_R_IMM: nextState <= RIMMTYPE_STATE;
+							
+						endcase
+					end
+			
+				LWSW_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b10;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						
+						case (Opcode)
+							OP_LOAD: nextState <= LW1_STATE;
+							OP_STORE: nextState <= SW_STATE;
+						endcase
+					end
+			
+			  RTYPE_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b10;
+						oPCSource <= 1'b0;
+						
+						nextState <= RTYPE2_STATE;
+					end
+				
+				LW1_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b1;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b1;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						
+						nextState <= LW2_STATE;
+					end
+				
+				LW2_STATE: 
+					begin
+						oRegWrite <= 1'b1;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b1;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						
+						nextState <= FETCH_STATE;
+					end
+				
+				SW_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b1;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b1;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b00;
+						oPCSource <= 1'b0;
+						
+						nextState <= FETCH_STATE;
 					end
 					
-					OP_B: begin
-						state <= STATE_EIGHT;
+			
+				BRANCH_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b1;
+						oALUOp <= 2'b01;
+						oPCSource <= 1'b1;
+						
+						nextState <= FETCH_STATE;
+						
 					end
-					
-					OP_LOAD: begin
-						state <= STATE_TWO;
+				
+				RIMMTYPE_STATE:
+					begin
+						oRegWrite <= 1'b0;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b10;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b10;
+						oPCSource <= 1'b0;
+						
+						nextState <= RTYPE2_STATE;
 					end
-					
-					OP_STORE: begin
-						state <= STATE_TWO;
+				
+				RTYPE2_STATE:
+					begin
+						oRegWrite <= 1'b1;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b0;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b10;
+						oPCSource <= 1'b0;
+						
+						nextState <= FETCH_STATE;
 					end
-					
-					OP_JAL: begin
-						state <= STATE_NINE;
-					end
-					
-					OP_R_IMM: begin
-						state <= STATE_SEVEN;
-					end
-				endcase
-			end 
-			
-			
-			STATE_TWO: begin 
-				case(Opcode)
-					OP_LOAD: begin
-						state <= STATE_THREE;
-					end
-					
-					OP_STORE: begin
-						state <= STATE_FIVE;
-					end
-				endcase
-			end
-			
-			
-			STATE_THREE: begin
-				state <= STATE_FOUR;
-			end
-			
-			
-			STATE_FOUR: begin
-				state <= STATE_ZERO;
-			end
-			
-			
-			STATE_FIVE: begin
-				state <= STATE_ZERO;
-			end
-			
-			
-			STATE_SIX: begin 
-				state <= STATE_ZERO;
-			end
-			
-			
-			state_saven: begin
-				state <= STATE_ZERO;
-			end
-			
-			
-			STATE_EIGHT:begin
-				state <= STATE_ZERO;
-			end
-			
-			
-			STATE_NINE:begin
-				state <= STATE_ZERO;
-			end
-		
-		
-			STATE_TEN: begin
-				state <= STATE_SEVEN;
-			end
-		endcase
-	end
-	
-	
-	//Define output for each state
-	always @(posedge iClk) begin
-		case(state)
-			//state_zero: begin 	
-			//end
-			
-			
-			STATE_ONE: begin 
-				//Output right
-				//oOrigPC = 1'b;
-				oALUOp = 2'b00;
-				oOrigAULA = 2'b00;
-				oOrigBULA = 2'b11;
-				//oWritePCB;
-				//oRegWrite;
-				//oMemTwoReg;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead;
-				//oWriteIR;
-	
 				
-			end 
-			
-			
-			STATE_TWO: begin 
-				//Output right
-				//oOrigPC <= 1'b;
-				oALUOp = 2'b00;
-				oOrigAULA = 2'b01;
-				oOrigBULA = 2'b10;
-				//oWritePCB;
-				//oRegWrite;
-				//oMemTwoReg;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead;
-				//oWriteIR;
-	
+			  JUMP_STATE:
+				  begin
+						oRegWrite <= 1'b1;
+						oALUSrcA <= 1'b1;
+						oALUSrcB <= 2'b00;
+						oMemRead <= 1'b0;
+						oMemWrite <= 1'b0;
+						oMemtoReg <= 1'b0;
+						oIoD <= 1'b0;
+						oIRWrite <= 1'b0;
+						oPCWrite <= 1'b1;
+						oPCWriteCond <= 1'b0;
+						oALUOp <= 2'b10;
+						oPCSource <= 1'b1;
+						
+						nextState <= FETCH_STATE;
+				  end
 				
-			end
-			
-			
-			STATE_THREE: begin
-				//Output right
-				//oOrigPC <= 1'b;
-				//oALUOp <= 2'b00;
-				//oOrigAULA <= 2'b00;
-				//oOrigBULA <= 2'b11;
-				//oWritePCB;
-				//oRegWrite;
-				//oMemTwoReg;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				oLoudD = 1'b1;
-				//oMemWrite;
-				oMemRead = 1'b0;
-				//oWriteIR;
-	
-				
-			end
-			
-			
-			STATE_FOUR: begin
-				//Output right
-				//oOrigPC = 1'b;
-				//oALUOp = 2'b00;
-				//oOrigAULA = 2'b00;
-				//oOrigBULA = 2'b11;
-				//oWritePCB;
-				//oRegWrite;
-				oMemTwoReg = 1'b10;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				oMemRead = 1'b0;
-				//oWriteIR;
-	
-			
-			end
-			
-			
-			STATE_FIVE: begin
-				//Output right
-				//oOrigPC = 1'b;
-				//oALUOp = 2'b00;
-				//oOrigAULA = 2'b00;
-				//oOrigBULA = 2'b11;
-				//oWritePCB;
-				//oRegWrite;
-				//oMemTwoReg = 1'b10;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				oLoudD = 1'b1;
-				oMemWrite = 1'b0;
-				//oMemRead = 1'b0;
-				//oWriteIR;
-				
-			end
-			
-			
-			STATE_SIX: begin 
-				//Output right
-				//oOrigPC = 1'b;
-				oALUOp = 2'b10;
-				oOrigAULA = 2'b01;
-				oOrigBULA = 2'b00;
-				//oWritePCB;
-				//oRegWrite;
-				//oMemTwoReg = 1'b10;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead = 1'b0;
-				//oWriteIR;
-				
-			end
-			
-			
-			state_saven: begin
-				//Output right
-				//oOrigPC = 1'b;
-				//oALUOp = 2'b00;
-				//oOrigAULA = 2'b00;
-				//oOrigBULA = 2'b11;
-				//oWritePCB;
-				oRegWrite = 1'b0;
-				oMemTwoReg = 2'b00;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead = 1'b0;
-				//oWriteIR;
-				
-			end
-			
-			
-			STATE_EIGHT:begin
-				//Output right
-				oOrigPC = 1'b1;
-				oALUOp = 2'b01;
-				oOrigAULA = 2'b01;
-				oOrigBULA = 2'b00;
-				//oWritePCB;
-				//oRegWrite;
-				oMemTwoReg = 2'b10;
-				//Output left
-				oWritePCCond = 1'b0;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead = 1'b0;
-				//oWriteIR;
-				
-			end
-			
-			
-			STATE_NINE:begin
-				//Output right
-				oOrigPC = 1'b1;
-				//oALUOp = 2'b00;
-				//oOrigAULA = 2'b00;
-				//oOrigBULA = 2'b11;
-				//oWritePCB;
-				oRegWrite = 1'b0;
-				oMemTwoReg =2'b01;
-				//Output left
-				//oWritePCCond;
-				oWritePC = 1'b0;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead = 1'b0;
-				//oWriteIR;
-				
-			end
-			
-			
-			STATE_TEN: begin
-				//Output right
-				//oOrigPC = 1'b;
-				oALUOp = 2'b10;
-				oOrigAULA = 2'b01;
-				oOrigBULA = 2'10;
-				//oWritePCB;
-				//oRegWrite;
-				//oMemTwoReg = 1'b10;
-				//Output left
-				//oWritePCCond;
-				//oWritePC;
-				//oLoudD <= 1'b0;
-				//oMemWrite;
-				//oMemRead = 1'b0;
-				//oWriteIR;
-			end
-		
-		endcase
-	end
-
-endmodule 
+			endcase
+endmodule
